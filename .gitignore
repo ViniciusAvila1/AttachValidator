@@ -1,0 +1,35 @@
+# Ignora o ambiente virtual
+venv/
+
+.env
+
+# Bytecode do Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Logs temporários
+*.log
+*.tmp
+
+# Configs do sistema operacional
+.DS_Store
+Thumbs.db
+
+# Arquivos de IDEs/editors
+.vscode/
+.idea/
+
+# Downloads automatizados (ex: se você baixar anexos com Selenium)
+downloads/
+*.zip
+*.pdf
+*.xlsx
+*.docx
+
+# Arquivos de backup
+*.bak
+
+# Arquivos ocultos gerados pelo Windows/PyCharm
+*.~*
