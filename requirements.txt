@@ -1,2 +1,5 @@
 selenium==4.21.0
 python-dotenv
+pytesseract
+Pillow
+opencv-python
