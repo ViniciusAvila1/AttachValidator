@@ -31,24 +31,27 @@ def baixar_e_validar_anexos(driver, wait, download_path):
                 nome_arquivo = link_tag.text.strip()
                 print(f"⬇️ Baixando {nome_arquivo}...")
 
-                # Antes de clicar, capturamos os arquivos já existentes
                 arquivos_antes = set(os.listdir(download_path))
-
                 link_tag.click()
 
-                # Espera aparecer um novo arquivo na pasta de download
-                timeout = 15
+                timeout = 30
                 novo_arquivo = None
                 for _ in range(timeout):
                     time.sleep(1)
                     arquivos_depois = set(os.listdir(download_path))
                     novos = arquivos_depois - arquivos_antes
-                    if novos:
-                        novo_arquivo = novos.pop()
+
+                    # verifica se algum novo arquivo está presente e não é .crdownload
+                    for arquivo in novos:
+                        if not arquivo.endswith(".crdownload"):
+                            novo_arquivo = arquivo
+                            break
+
+                    if novo_arquivo:
                         break
 
                 if not novo_arquivo:
-                    print(f"❌ {nome_arquivo}: Download não detectado após {timeout} segundos.")
+                    print(f"❌ {nome_arquivo}: Download não finalizado após {timeout} segundos.")
                     continue
 
                 caminho_arquivo = os.path.join(download_path, novo_arquivo)
@@ -60,3 +63,11 @@ def baixar_e_validar_anexos(driver, wait, download_path):
 
         except Exception as e:
             print(f"⚠️ Erro inesperado no bloco {bloco_id}: {e}")
+
+        # limpar anexos após cada bloco
+        for arquivo in os.listdir(download_path):
+            caminho_completo = os.path.join(download_path, arquivo)
+            try:
+                os.remove(caminho_completo)
+            except Exception as e:
+                print(f"⚠️ Erro ao apagar {arquivo}: {e}")
