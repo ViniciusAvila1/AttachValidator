@@ -21,7 +21,7 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Downloads automatizados (ex: se você baixar anexos com Selenium)
+# Downloads automatizados
 downloads/
 *.zip
 *.pdf
