@@ -21,22 +21,31 @@ def filtrar_criacao_usuario_clicklev(driver, wait):
         By.XPATH, '//label[contains(text(), "WORKFLOW - CRIACAO DE NOVO USUARIO")]/input'
     )))
     opcao_tipo.click()
-
+    
+    """
+    opcao_tipo = wait.until(EC.element_to_be_clickable((
+        By.XPATH, '//label[contains(text(), "WORKFLOW - RESET SENHA")]/input'
+    )))
+    opcao_tipo.click()
+    """
+    
     situacao_btn = wait.until(EC.element_to_be_clickable((
         By.XPATH, '//div[label[contains(text(), "Situação")]]//button'
     )))
     situacao_btn.click()
-
+    """
     etapa_checkbox = wait.until(EC.element_to_be_clickable((
         By.XPATH, '//label[contains(text(), "ETAPA INTERNA")]/input',
     )))
     etapa_checkbox.click()
+    """
     
     aguarda_checkbox = wait.until(EC.element_to_be_clickable((
         By.XPATH, '//label[contains(text(), "AGUARDANDO")]/input',
     )))
     aguarda_checkbox.click()
-
+    
+    
     banco_btn = wait.until(EC.element_to_be_clickable((
         By.XPATH, '//div[label[contains(text(), "Banco")]]//button'
     )))
@@ -47,6 +56,13 @@ def filtrar_criacao_usuario_clicklev(driver, wait):
     )))
     clicklev_checkbox.click()
     
+    """
+    clickpower_checkbox = wait.until(EC.element_to_be_clickable((
+        By.XPATH, '//label[contains(text(), "CLICKPOWER")]/input'
+    )))
+    clickpower_checkbox.click()
+    """
+        
     # Define as datas: início fixo e fim como data atual
     data_inicial = "01/01/2025"
     data_final = datetime.today().strftime('%d/%m/%Y')
