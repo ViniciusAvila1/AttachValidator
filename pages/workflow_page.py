@@ -16,12 +16,12 @@ def filtrar_criacao_usuario_clicklev(driver, wait):
         By.XPATH, '//button[contains(@class, "multiselect dropdown-toggle")]'
     )))
     tipo_btn.click()
-
+    
     opcao_tipo = wait.until(EC.element_to_be_clickable((
         By.XPATH, '//label[contains(text(), "WORKFLOW - CRIACAO DE NOVO USUARIO")]/input'
     )))
     opcao_tipo.click()
-    
+
     """
     opcao_tipo = wait.until(EC.element_to_be_clickable((
         By.XPATH, '//label[contains(text(), "WORKFLOW - RESET SENHA")]/input'
@@ -33,19 +33,17 @@ def filtrar_criacao_usuario_clicklev(driver, wait):
         By.XPATH, '//div[label[contains(text(), "Situação")]]//button'
     )))
     situacao_btn.click()
-    """
+    
     etapa_checkbox = wait.until(EC.element_to_be_clickable((
         By.XPATH, '//label[contains(text(), "ETAPA INTERNA")]/input',
     )))
     etapa_checkbox.click()
     """
-    
     aguarda_checkbox = wait.until(EC.element_to_be_clickable((
         By.XPATH, '//label[contains(text(), "AGUARDANDO")]/input',
     )))
     aguarda_checkbox.click()
-    
-    
+    """
     banco_btn = wait.until(EC.element_to_be_clickable((
         By.XPATH, '//div[label[contains(text(), "Banco")]]//button'
     )))

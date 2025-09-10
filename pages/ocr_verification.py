@@ -26,20 +26,20 @@ def normalizar_texto(texto):
 def extrair_texto_imagem(imagem_bytes):
     imagem = Image.open(io.BytesIO(imagem_bytes))
     imagem.load()
-    return pytesseract.image_to_string(imagem, lang='por')
+    return pytesseract.image_to_string(imagem, lang='por') # Ajuste para português
 
-def extrair_texto_pdf(pdf_bytes):
+def extrair_texto_pdf(pdf_bytes): # extrai texto de PDF, usando OCR se necessário
     texto = ""
-    with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
-        for page in doc:
-            text_page = page.get_text()
+    with fitz.open(stream=pdf_bytes, filetype="pdf") as doc: 
+        for page in doc: 
+            text_page = page.get_text() 
             if text_page.strip():
                 texto += text_page
             else:
-                pix = page.get_pixmap(dpi=300)
-                img_bytes = pix.tobytes("png")
-                imagem = Image.open(io.BytesIO(img_bytes))
-                texto += pytesseract.image_to_string(imagem, lang='por')
+                pix = page.get_pixmap(dpi=300) 
+                img_bytes = pix.tobytes("png") 
+                imagem = Image.open(io.BytesIO(img_bytes)) 
+                texto += pytesseract.image_to_string(imagem, lang='por') 
     return texto
 
 def corrigir_texto_para_valor(texto):
@@ -68,36 +68,46 @@ def imprimir_detalhes_comprovante(nome, tem_palavras, tem_valor, tem_cnpj, tem_n
             print(f"    ✔️ Data válida (últimos 5 dias): {'Sim' if data_valida else 'Não'}")
             print(f"    ⚠️ Termos proibidos detectados: {'Sim' if contem_proibidas else 'Não'}")
 
-def extrair_nome_pagador(texto: str) -> str:
+def extrair_nome_pagador(texto: str) -> str: # extrai o nome do titular do pagamento a partir do texto OCR
     padroes_possiveis = [
+        r"Nome do pagador\s*[:\-]?\s*(.+)",
         r"Origem.*?Nome\s*[:\-]?\s*(.+)",
         r"(?<=Pagador\s)([A-ZÀ-ÿa-z\s]{5,})",
+        r"(?<=Solicitante\s)([A-ZÀ-ÿa-z\s]{5,})",
         r"(?<=Nome\s)([A-ZÀ-ÿa-z\s]{5,})",
         r"(?<=Dados do pagador\s)([A-ZÀ-ÿa-z\s]{5,})",
     ]
+    
+    for marcador in ["dados de quem pagou", "origem"]:
+        if marcador in texto.lower():
+            trecho = texto.lower().split(marcador, 1)[1]  # pega tudo após o marcador
+            match_nome = re.search(r"nome\s*[:\-]?\s*(.+)", trecho, re.IGNORECASE)
+            if match_nome:
+                return limpar_nome(match_nome.group(1))
+    
+    #padrão caixa, buscando "Dados do pagador" ao invés de somente "Nome"
+    inicio_pagador = re.search(r"dados do pagador", texto, re.IGNORECASE)
+    if not inicio_pagador:
+        return "NOME NÃO ENCONTRADO"
+    
+    trecho_pagador = texto[inicio_pagador.end():] #pegando a partir de dados do pagador
+    
+    match_nome = re.search(r"nome\s*[:\-]?\s*(.+)", trecho_pagador, re.IGNORECASE)
+    
+    if match_nome:
+        nome_extraido = match_nome.group(1).strip()
+        nome_extraido = re.sub(r"[^a-zà-ú\s]", "", nome_extraido, flags=re.IGNORECASE) # remove caracteres especiais
+        nome_extraido = re.sub(r"\s{2,}", " ", nome_extraido).strip() # remove espaços múltiplos
+        return nome_extraido.upper() # Se não encontrar, retorna um padrão
 
+    # demais padrões
     for padrao in padroes_possiveis:
         match = re.search(padrao, texto, re.IGNORECASE | re.DOTALL)
         if match:
-            nome = match.group(1).strip()
-            # remove caracteres especiais
-            nome = re.sub(r"\bC*CPF\b", "", nome, flags=re.IGNORECASE)
-            nome_limpo = re.sub(r"[^\w\sÀ-ÿ]", "", nome)
-            # remove números
-            nome_limpo = re.sub(r"\d+", "", nome_limpo)
-            # remove espaços múltiplos
-            nome_limpo = re.sub(r"\s+", " ", nome_limpo).strip()
-            
-            # Se o nome começa com "De" e tem mais de 2 palavras, remove "De"
-            if nome_limpo.upper().startswith("DE ") and len(nome_limpo.split()) > 2:
-                nome_limpo = nome_limpo[3:].strip()
-                
-            if 2 <= len(nome_limpo.split()) <= 6:
-                return nome_limpo.upper()
+            return limpar_nome(match.group(1))
 
     #heurística em python: procurar após "De" e ignorar linhas vazias
-    
-    #Pagbank
+    # padrão pagbank
     linhas = texto.splitlines()
     for i, linha in enumerate(linhas):
         if re.match(r"^\s*(De|/Pagador)\s*$", linha, re.IGNORECASE):
@@ -120,6 +130,16 @@ def extrair_nome_pagador(texto: str) -> str:
                     if 2 <= len(nome.split()) <= 6:
                         return nome.upper()
                     break
+def limpar_nome(nome: str) -> str:
+    nome = re.sub(r"\bC*CPF\b", "", nome, flags=re.IGNORECASE)
+    nome = re.sub(r"[^\w\sÀ-ÿ]", "", nome)
+    nome = re.sub(r"\d+", "", nome)
+    nome = re.sub(r"\s+", " ", nome).strip()
+    if nome.upper().startswith("DE ") and len(nome.split()) > 2:
+        nome = nome[3:].strip()
+    if 2 <= len(nome.split()) <= 6:
+        return nome.upper()
+    return "NOME NÃO ENCONTRADO"
 
 def extrair_usuario_de_nome_arquivo(nome_arquivo: str) -> str:
     """
@@ -168,16 +188,6 @@ def extrair_data_e_hora_pix(texto: str) -> str:
             data_formatada = f"{int(dia):02d}/{mes}"
             return f"{data_formatada} {hora}"
 
-    """ Novo padrão: 30 de julho de 2025, 21:01
-    padrao_por_extenso = r"(\d{1,2})\s+de\s+(janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s+de\s+(\d{4})[, ]+\s*(\d{2}:\d{2})"
-    match = re.search(padrao_por_extenso, texto, re.IGNORECASE)
-    if match:
-        dia, mes_ext, ano, hora = match.groups()
-        mes = meses.get(mes_ext.lower())
-        if mes:
-            data_formatada = f"{int(dia):02d}/{mes}"
-            return f"{data_formatada} {hora}"
-    """
     # Padrão abreviado com mês (ex: 30 JUL 2025 21:01)
     meses_abrev = {
         "JAN": "01", "FEV": "02", "MAR": "03", "ABR": "04", "MAI": "05", "JUN": "06",
